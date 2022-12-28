@@ -1,0 +1,27 @@
+---
+- hosts: localhost
+  become: yes
+  connection: local
+  vars:
+    chart_name: nginx
+    chart_repo: https://kubernetes.github.io/ingress-nginx
+    chart_version: 11.1.1
+    release_name: my-nginx
+    namespace: default
+  tasks:
+  - name: Add stable chart repo (TASK 01)
+    kubernetes.core.helm_repository:
+      name: bitnami
+      repo_url: "https://kubernetes.github.io/ingress-nginx"
+  - name: Install chart (TASK 02)
+    kubernetes.core.helm:
+      name: "{{ release_name }}"
+      chart: "{{ chart_name }}"
+      version: "{{ chart_version }}"
+      namespace: "{{ namespace }}"
+      repository: "{{ chart_repo }}"
+      values:
+        image:
+          repository: "bitnami/nginx"
+          tag: "{{ chart_version }}"
+        replicaCount: 1
