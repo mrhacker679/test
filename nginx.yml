@@ -1,0 +1,41 @@
+---
+- hosts: localhost
+  become: yes
+  connection: local
+  vars:
+    chart_name: nginx
+    chart_repo: https://charts.bitnami.com/bitnami
+    chart_version: 11.1.1
+    release_name: my-nginx
+    namespace: default
+  tasks:
+  - name: Add chart repository
+    kubernetes.core.helm_repository:
+      name: "{{ chart_repo }}"
+      url: "{{ chart_repo }}"
+  - name: Install chart
+    kubernetes.core.helm:
+      name: "{{ release_name }}"
+      chart: "{{ chart_name }}"
+      version: "{{ chart_version }}"
+      namespace: "{{ namespace }}"
+      repository: "{{ chart_repo }}"
+      values:
+        - image:
+            repository: "bitnami/nginx"
+            tag: "{{ chart_version }}"
+        - replicaCount: 1
+  - name: Wait for release to be deployed
+    kubernetes.core.k8s:
+      api_version: v1
+      kind: Deployment
+      namespace: "{{ namespace }}"
+      name: "{{ release_name }}"
+      wait: yes
+      state: present
+  - name: Wait for services to be available
+    kubernetes.core.k8s:
+      api_version: v1
+      kind: Service
+      namespace: "{{ namespace }}"
+      
